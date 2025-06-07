@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vault</title>
+  </head>
+  <body
+    style="
+      background-color: #333;
+      color: #eee;
+      font-family: monospace;
+      text-align: center;
+    "
+  >
+    <h1>Vault</h1>
+    <input type="password" id="input" />
+    <button onclick="decryptVault()">Decrypt!</button>
+    <pre style="text-align: left"></pre>
+
+    <h1>OTP</h1>
+    <input type="password" id="otpInput" />
+    <button onclick="generateOTP()">Generate!</button>
+    <input type="text" id="otpOutput" readonly />
+
+    <script src="openpgp.min.js"></script>
+    <script src="otpauth.min.js"></script>
+    <script>
+      async function decryptVault() {
+        const input = document.getElementById("input").value;
+        const output = document.getElementsByTagName("pre")[0];
+
+        const armoredMessage = await (await fetch("vault")).text();
+        const message = await openpgp.readMessage({ armoredMessage });
+        const { data: decryptedMessage } = await openpgp.decrypt({
+          message,
+          passwords: [input],
+          format: "utf8",
+        });
+        output.textContent = JSON.stringify(
+          JSON.parse(decryptedMessage),
+          null,
+          2
+        );
+      }
+      function generateOTP() {
+        const otpInput = document.getElementById("otpInput").value.trim();
+        const otpOutput = document.getElementById("otpOutput");
+        otpOutput.value = "";
+
+        const totp = new OTPAuth.TOTP({
+          secret: OTPAuth.Secret.fromBase32(otpInput),
+        });
+
+        var generatedCode = totp.generate();
+        otpOutput.value = generatedCode;
+      }
+    </script>
+  </body>
+</html>

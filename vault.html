@@ -36,23 +36,43 @@
           passwords: [input],
           format: "utf8",
         });
-        output.textContent = JSON.stringify(
-          JSON.parse(decryptedMessage),
-          null,
-          2
-        );
+        const vaultContents = JSON.parse(decryptedMessage);
+        output.appendChild(jsonToHtmlTree(vaultContents));
       }
-      function generateOTP() {
-        const otpInput = document.getElementById("otpInput").value.trim();
-        const otpOutput = document.getElementById("otpOutput");
-        otpOutput.value = "";
-
+      function jsonToHtmlTree(object) {
+        const ul = document.createElement("ul");
+        for (const key in object) {
+          const li = document.createElement("li");
+          const value = object[key];
+          if (typeof value === "string") {
+            const copyButton = document.createElement("button");
+            copyButton.textContent = "Copy Raw Value";
+            copyButton.onclick = () => {
+              navigator.clipboard.writeText(value);
+            };
+            const otpButton = document.createElement("button");
+            otpButton.textContent = "Copy TOTP";
+            otpButton.onclick = () => {
+              navigator.clipboard.writeText(generateOTP(value));
+            };
+            const innerUl = document.createElement("ul");
+            innerUl.appendChild(copyButton);
+            innerUl.appendChild(otpButton);
+            li.textContent = key;
+            li.appendChild(innerUl);
+          } else {
+            li.textContent = key;
+            li.appendChild(jsonToHtmlTree(value));
+          }
+          ul.appendChild(li);
+        }
+        return ul;
+      }
+      function generateOTP(secret) {
         const totp = new OTPAuth.TOTP({
-          secret: OTPAuth.Secret.fromBase32(otpInput),
+          secret: OTPAuth.Secret.fromBase32(secret),
         });
-
-        var generatedCode = totp.generate();
-        otpOutput.value = generatedCode;
+        return totp.generate();
       }
     </script>
   </body>

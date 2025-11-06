@@ -4,5 +4,5 @@ decrypt:
 encrypt:
 	jq -S . decrypted_vault.json > sorted_decrypted_vault.json && \
 	mv sorted_decrypted_vault.json decrypted_vault.json && \
-	gpg --symmetric --armor --output vault decrypted_vault.json && \
+	gpg --pinentry-mode loopback --symmetric --armor --output vault decrypted_vault.json && \
 	rm decrypted_vault.json
